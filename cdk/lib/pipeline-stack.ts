@@ -36,11 +36,11 @@ export class PipelineStack extends Stack{
                     ]
                 },
                 build: {
-                    commands: "npm run build"
+                    commands: "npm run build && ls -alh"
                 }
             },
             artifacts: {
-                "base-directory": "../",
+                "base-directory": ".",
                 files: [
                 "build/**/*",
                 "node_modules/**/*",
