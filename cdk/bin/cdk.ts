@@ -23,4 +23,5 @@ const webapp = new CdkStack(app, 'CdkStack', {
 
 const pipeline = new PipelineStack(app, 'PipelineStack', {
   webapp: webapp,
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
 });

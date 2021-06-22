@@ -69,7 +69,7 @@ export class PipelineStack extends Stack{
                     }),
                 ],
               },
-              
+
               {
                 stageName: 'Build',
                 actions: [
@@ -81,12 +81,18 @@ export class PipelineStack extends Stack{
                     }),
                 ],
               },
-              /** 
+
               {
                 stageName: 'Deploy',
-                actions: [],
+                actions: [
+                    new codepipeline_actions.S3DeployAction({
+                        actionName: 'Deploy_to_S3',
+                        input: buildOutput,
+                        bucket: webapp.bucket
+                    })
+                ],
               },
-              */
+              
             ],
           });
     }
