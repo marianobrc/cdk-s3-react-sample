@@ -4,6 +4,7 @@ import codebuild = require('@aws-cdk/aws-codebuild');
 import codepipeline = require('@aws-cdk/aws-codepipeline');
 import codepipeline_actions = require('@aws-cdk/aws-codepipeline-actions');
 import ssm = require("@aws-cdk/aws-ssm");
+import iam = require("@aws-cdk/aws-iam");
 import { CdkStack } from './cdk-stack';
 
 
@@ -51,6 +52,34 @@ export class PipelineStack extends Stack{
             }
         });
 
+        // Create the build project that will invalidate the CloudFront cache
+        const invalidateBuildProject = new codebuild.PipelineProject(this, `InvalidateProject`, {
+            buildSpec: codebuild.BuildSpec.fromObject({
+            version: '0.2',
+            phases: {
+                build: {
+                commands:[
+                    'aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_ID} --paths "/*"',
+                    // Choose whatever files or paths you'd like, or all files as specified here
+                ],
+                },
+            },
+            }),
+            environmentVariables: {
+            CLOUDFRONT_ID: { value: webapp.cloudfrontDistro.distributionId },
+            },
+        });
+        
+        // Add Cloudfront invalidation permissions to the project
+        const distributionArn = `arn:aws:cloudfront::${this.account}:distribution/${webapp.cloudfrontDistro.distributionId}`;
+        invalidateBuildProject.addToRolePolicy(new iam.PolicyStatement({
+            resources: [distributionArn],
+            actions: [
+            'cloudfront:CreateInvalidation',
+            ],
+        }));
+  
+
         // The pipeline
         new codepipeline.Pipeline(this, 'Pipeline', {
             restartExecutionOnUpdate: true,
@@ -79,15 +108,22 @@ export class PipelineStack extends Stack{
                     }),
                 ],
               },
-              
+
               {
                 stageName: 'Deploy',
                 actions: [
                     new codepipeline_actions.S3DeployAction({
                         actionName: 'Deploy_to_S3',
                         input: buildOutput,
-                        bucket: webapp.bucket
-                    })
+                        bucket: webapp.bucket,
+                        runOrder: 1,
+                    }),
+                    new codepipeline_actions.CodeBuildAction({
+                        actionName: 'Invalidate_Cache',
+                        project: invalidateBuildProject,
+                        input: buildOutput,
+                        runOrder: 2,
+                    }),
                 ],
               }
             ],
