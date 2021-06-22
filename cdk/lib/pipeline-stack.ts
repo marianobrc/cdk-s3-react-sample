@@ -41,9 +41,10 @@ export class PipelineStack extends Stack{
                 }
             },
             artifacts: {
-                "base-directory": ".",
+                "base-directory": "build",
                 files: [
-                "build/**/*"
+                    "**/*",
+                    "index.html"
                 ]
             }
             }),
