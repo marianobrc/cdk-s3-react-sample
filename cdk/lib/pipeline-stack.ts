@@ -42,9 +42,7 @@ export class PipelineStack extends Stack{
             artifacts: {
                 "base-directory": ".",
                 files: [
-                "build/**/*",
-                "node_modules/**/*",
-                "@types"
+                "build/**/*"
                 ]
             }
             }),
@@ -81,7 +79,7 @@ export class PipelineStack extends Stack{
                     }),
                 ],
               },
-
+              
               {
                 stageName: 'Deploy',
                 actions: [
@@ -91,8 +89,7 @@ export class PipelineStack extends Stack{
                         bucket: webapp.bucket
                     })
                 ],
-              },
-              
+              }
             ],
           });
     }
